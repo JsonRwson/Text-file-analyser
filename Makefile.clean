@@ -1,0 +1,102 @@
+####################################### BEG_3 ####
+
+# The name of the final program (the executable)
+NAME        := fileLoader
+
+#------------------------------------------------#
+#   INGREDIENTS                                  #
+#------------------------------------------------#
+
+# Source code and object file directories
+SRC_DIR     := src        # Folder where .cpp files are stored
+OBJ_DIR     := obj        # Folder where compiled .o files will be placed
+
+# List of source files (just the names initially)
+SRCS        := \
+	main.cpp          \
+	file_loader.cpp
+
+# Prepend 'src/' to each filename so we get full paths like 'src/main.cpp'
+SRCS        := $(SRCS:%=$(SRC_DIR)/%)
+
+# Replace .cpp extensions with .o and 'src/' with 'obj/' to get object file paths
+# Example: src/main.cpp -> obj/main.o
+OBJS        := $(SRCS:$(SRC_DIR)/%.cpp=$(OBJ_DIR)/%.o)
+
+#------------------------------------------------#
+#   COMPILER CONFIGURATION                       #
+#------------------------------------------------#
+
+# The compiler to use
+CXX         := g++
+
+# Compiler flags:
+# -Wall: enable all basic warnings
+# -Wextra: enable extra (useful) warnings
+# -Werror: treat warnings as errors (forces code quality)
+CXXFLAGS    := -Wall -Wextra -Werror
+
+# Preprocessor flags:
+# -I include: tells compiler to look in 'include/' for header files
+CPPFLAGS    := -I include
+
+#------------------------------------------------#
+#   UTILITY COMMANDS                             #
+#------------------------------------------------#
+
+# Command to remove files (used in clean targets)
+RM          := rm -f
+
+# Make output is cleaner -- doesn't print unnecessary directory info
+MAKEFLAGS   += --no-print-directory
+
+# Helper to create parent directories as needed
+# $(@D) = the directory part of the target file
+DIR_DUP     = mkdir -p $(@D)
+
+#------------------------------------------------#
+#   BUILD TARGETS                                #
+#------------------------------------------------#
+
+# Default target -- what gets built when you just run `make`
+all: $(NAME)
+
+# How to build the final program
+# Link all the .o object files into one executable
+$(NAME): $(OBJS)
+	$(CXX) $(OBJS) -o $(NAME)
+	@echo "CREATED $(NAME)"
+
+# How to build each object file from its corresponding .cpp file
+# Ensures the obj/ directory exists, compiles .cpp into .o
+$(OBJ_DIR)/%.o: $(SRC_DIR)/%.cpp
+	$(DIR_DUP)
+	$(CXX) $(CXXFLAGS) $(CPPFLAGS) -c -o $@ $<
+	@echo "CREATED $@"
+
+#------------------------------------------------#
+#   CLEANUP TARGETS                              #
+#------------------------------------------------#
+
+# Removes only the object files (.o)
+clean:
+	$(RM) $(OBJS)
+
+# Removes both object files and the final executable
+fclean: clean
+	$(RM) $(NAME)
+
+# Shortcut to fully clean and then rebuild everything from scratch
+re:
+	$(MAKE) fclean
+	$(MAKE) all
+
+#------------------------------------------------#
+#   SPECIAL FLAGS                                #
+#------------------------------------------------#
+
+# Marks targets that are not actual files
+.PHONY: all clean fclean re
+
+# Suppresses command output in terminal (e.g. doesn't echo every `g++` command)
+.SILENT:
